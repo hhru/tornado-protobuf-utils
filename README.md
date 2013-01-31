@@ -16,7 +16,7 @@ def _search_service_cb(resume_search_result):
 fetcher = AsyncHTTPClient().fetch
 logger = logging
 
-search_service = tornado.protobuf.client.construct_service(ResumeSearch_Stub,
+search_service = tornado.protobuf.client.construct_protobuf_service(ResumeSearch_Stub,
     self.config.protoSearchHost,
     fetcher,
     logger,
@@ -31,7 +31,7 @@ search_service.ResumeSearch(rpc_controller, resume_pb2.ResumeCriteria(), _search
  * ```frontik.handler.PageHandler().fetch_request``` async http client wrapper in Frontik-based applications
  * any other http client that applies ```tornado.httpclient.HTTPRequest``` in their fetch functions
 
-```construct_service``` almost applies any number of kw arguments that will be proxied to HTTPRequest constructor.
+```construct_protobuf_service``` almost applies any number of kw arguments that will be proxied to HTTPRequest constructor.
 
 Except ```data``` argument, that should be dict of any additional params that should be passed into request url (for example, passing ```data = {'requestId' : 1}```
 would provide request url as the following: ```http://proto.host:port/SearchService/ResumeSearch?requestId=1```).
