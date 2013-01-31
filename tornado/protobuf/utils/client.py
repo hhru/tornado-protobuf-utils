@@ -19,12 +19,12 @@ def construct_protobuf_service(service_stub, host, fetcher = AsyncHTTPClient().f
 
 class RpcController(object):
     def __init__(self):
+        self.Reset()
+
+    def Reset(self):
         self.fail_reason = None
         self.canceled = False
         self.failed = False
-
-    def Reset(self):
-        pass
 
     def StartCancel(self):
         self.canceled = True
