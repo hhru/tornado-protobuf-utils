@@ -56,3 +56,12 @@ Everything is similar to async way, but:
 
 
 Function for creating protobuf service is ```construct_sync_protobuf_service```
+
+Protobuf service url convention
+-------------
+
+By default, protobuf service url compiles by the following way:
+
+```url = self.host.rstrip('/') + '/{0}/{1}'.format(method_descriptor.containing_service.name, method_descriptor.name)```
+
+where ```method_descriptor``` is the first argument in ```CallMethod``` of ```RpcChannel``` class.
