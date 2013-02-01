@@ -1,3 +1,9 @@
+hh-tornado-protobuf-utils (0.0.1+hh01) unstable; urgency=low
+
+  * Fixed tornado package dependency
+
+ -- Vitaly Glibin (glibin) <v.glibin@hh.ru>  Fri, 01 Feb 2013 20:01:24 +0400
+
 hh-tornado-protobuf-utils (0.0.1) unstable; urgency=low
 
   [ Vitaly Glibin ]
