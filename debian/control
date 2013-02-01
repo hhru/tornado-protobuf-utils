@@ -9,5 +9,5 @@ Homepage: https://github.com/hhru/tornado-protobuf-utils
 
 Package: hh-tornado-protobuf-utils
 Architecture: all
-Depends: tornado (>= 2.0.0)
+Depends: python-tornado (>= 2.0.0)
 Description: Tornado client for protobuf rpc services
