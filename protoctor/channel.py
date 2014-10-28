@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import base64
 from collections import namedtuple
+import inspect
+import time
+
 from tornado.httpclient import HTTPRequest, HTTPResponse, HTTPError
 from tornado.httputil import url_concat
-import inspect
-import base64
 
 Error = namedtuple('Error', 'error,code,reason')
+
 
 class RpcChannel(object):
     ct_header = 'Content-Type'
@@ -52,6 +55,8 @@ class RpcChannel(object):
             method_descriptor.name)
 
         def _cb(response):
+            start_time = time.time()
+
             rc = response_class()
             try:
                 rc.ParseFromString(response.body)
@@ -67,7 +72,11 @@ class RpcChannel(object):
                 if response.headers.get(self.ct_header) != response.request.headers.get(self.ct_header):
                     self.logger.warn('Wrong Content-Type in response: ' + str(response.headers.get(self.ct_header)))
 
-                self.logger.debug('Decoded protobuf response from %s', response.request.url, extra={'_protobuf': str(rc)})
+                self.logger.info(
+                    'Decoded protobuf response from %s in %.2fms',
+                    response.request.url, (time.time() - start_time) * 1000,
+                    extra={'_protobuf': str(rc)}
+                )
 
             done(rc)
 
@@ -106,11 +115,18 @@ class RpcChannel(object):
 
         rpc_controller.Reset()
 
+        start_time = time.time()
         http_request = self.construct_http_request(url, request.SerializeToString())
+
         if self.logger:
-            self.logger.debug('Encoding protobuf request to %s %s', http_request.method, http_request.url, extra={'_protobuf': str(request)})
+            self.logger.info(
+                'Encoded protobuf request to %s %s in %.2fms',
+                http_request.method, http_request.url, (time.time() - start_time) * 1000,
+                extra={'_text': str(request)}
+            )
 
         self.fetch(http_request, _cb)
+
 
 class AsyncRpcChannel(RpcChannel):
     def fetch(self, http_request, callback):
