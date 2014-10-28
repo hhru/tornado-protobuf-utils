@@ -14,10 +14,10 @@ class TestHook(test):
 
 setup(
     name='hh-tornado-protobuf-utils',
-    version='0.0.1',
+    version=__import__('protoctor').__version__,
     packages=['protoctor'],
     cmdclass={'test': TestHook},
     install_requires=[
-        'nose', 'pep8'
+        'nose', 'pep8', 'hhwebutils'
     ]
 )
