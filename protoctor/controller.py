@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 class RpcController(object):
     def __init__(self):
         self.Reset()
