@@ -2,3 +2,10 @@
 
 %:
 	dh $@
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build .*egg-info
+
+override_dh_auto_test:
+	python setup.py test || exit 1

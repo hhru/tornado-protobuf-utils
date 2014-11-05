@@ -1,17 +1,20 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
 
+import base64
 from collections import namedtuple
+import inspect
+import time
+
 from tornado.httpclient import HTTPRequest, HTTPResponse, HTTPError
 from tornado.httputil import url_concat
-import inspect
-import base64
 
 Error = namedtuple('Error', 'error,code,reason')
 
+
 class RpcChannel(object):
-    ct_header = 'Content-Type'
-    protobuf_ct = 'application/x-protobuf'
-    get_arg = 'request'
+    CONTENT_TYPE_HEADER = 'Content-Type'
+    PROTOBUF_CONTENT_TYPE = 'application/x-protobuf'
+    GET_ARGUMENT_NAME = 'request'
 
     def __init__(self, host, fetcher, **kwargs):
         self.host = host
@@ -22,9 +25,9 @@ class RpcChannel(object):
 
     def construct_http_request(self, url, body):
         request_params = dict(
-            method = 'POST',
-            headers = {
-                self.ct_header: self.protobuf_ct
+            method='POST',
+            headers={
+                RpcChannel.CONTENT_TYPE_HEADER: RpcChannel.PROTOBUF_CONTENT_TYPE
             }
         )
 
@@ -33,8 +36,8 @@ class RpcChannel(object):
                 request_params[k] = v
 
         data = self.kwargs.get('data', {})
-        if request_params['method'] not in ("POST", "PATCH", "PUT"):
-            data[self.get_arg] = base64.b64encode(body)
+        if request_params['method'] not in ('POST', 'PATCH', 'PUT'):
+            data[RpcChannel.GET_ARGUMENT_NAME] = base64.b64encode(body)
         else:
             request_params['body'] = body
 
@@ -45,13 +48,16 @@ class RpcChannel(object):
             response = self.fetcher(http_request)
             callback(response)
         except HTTPError, e:
-            callback(e.response or HTTPResponse(http_request, e.code, error = e))
+            callback(e.response or HTTPResponse(http_request, e.code, error=e))
 
     def CallMethod(self, method_descriptor, rpc_controller, request, response_class, done):
-        url = self.host.rstrip('/') + '/{0}/{1}'.format(method_descriptor.containing_service.name,
-            method_descriptor.name)
+        url = '{host}/{service}/{method}'.format(
+            host=self.host.rstrip('/'), service=method_descriptor.containing_service.name, method=method_descriptor.name
+        )
 
         def _cb(response):
+            decode_start_time = time.time()
+
             rc = response_class()
             try:
                 rc.ParseFromString(response.body)
@@ -64,26 +70,33 @@ class RpcChannel(object):
                 return
 
             if self.logger:
-                if response.headers.get(self.ct_header) != response.request.headers.get(self.ct_header):
-                    self.logger.warn('Wrong Content-Type in response: ' + str(response.headers.get(self.ct_header)))
+                response_content_type = response.headers.get(RpcChannel.CONTENT_TYPE_HEADER)
+                if response_content_type != response.request.headers.get(RpcChannel.CONTENT_TYPE_HEADER):
+                    self.logger.warn('Wrong Content-Type in response: %s', response_content_type)
 
-                self.logger.debug('Decoded protobuf response from %s', response.request.url, extra={'_protobuf': str(rc)})
+                self.logger.info(
+                    'Decoded protobuf response from %s in %.2fms',
+                    response.request.url, (time.time() - decode_start_time) * 1000,
+                    extra={'_text': str(rc)}
+                )
 
             done(rc)
 
-        def _error(response, headers, error = None, code = None):
-            fail_reason = 'RPC fail: ' + _compose_reason(headers, error) + "\n response is:\n" + str(response)
+        def _error(response, headers, error=None, code=None):
+            fail_reason = 'RPC fail: ' + _compose_reason(headers, error) + '\n response is:\n' + str(response)
             rpc_controller.SetFailed(_compose_error(error, code, fail_reason))
             done(None)
 
         def _error_no_proto_msg(msg, headers, error, code):
             reason_header = 'RPC fail: ' + _compose_reason(headers, error)
+
             try:
-                fail_reason = reason_header + ("\nmessage is:\n" + str(msg) if msg is not None else "")
+                fail_reason = reason_header + ('\nmessage is:\n' + str(msg) if msg is not None else '')
                 error_data = _compose_error(error, code, fail_reason)
             except ValueError:
-                fail_reason = reason_header + ("\nCan't show message")
+                fail_reason = reason_header + "\nCan't show message"
                 error_data = _compose_error(error, code, fail_reason)
+
             rpc_controller.SetFailed(error_data)
             done(None)
 
@@ -106,12 +119,19 @@ class RpcChannel(object):
 
         rpc_controller.Reset()
 
+        encode_start_time = time.time()
         http_request = self.construct_http_request(url, request.SerializeToString())
+
         if self.logger:
-            self.logger.debug('Encoding protobuf request to %s %s', http_request.method, http_request.url, extra={'_protobuf': str(request)})
+            self.logger.info(
+                'Encoded protobuf request to %s %s in %.2fms',
+                http_request.method, http_request.url, (time.time() - encode_start_time) * 1000,
+                extra={'_text': str(request)}
+            )
 
         self.fetch(http_request, _cb)
 
+
 class AsyncRpcChannel(RpcChannel):
     def fetch(self, http_request, callback):
-        self.fetcher(http_request, callback = callback)
+        self.fetcher(http_request, callback=callback)
