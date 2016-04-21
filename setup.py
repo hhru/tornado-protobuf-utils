@@ -32,6 +32,9 @@ setup(
     packages=['protoctor'],
     cmdclass={'build_py': BuildHook, 'test': TestHook},
     install_requires=[
-        'nose', 'pep8', 'hhwebutils'
+        'nose', 'hhwebutils'
+    ],
+    tests_require=[
+        'pep8 < 1.6'
     ]
 )
