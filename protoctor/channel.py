@@ -77,7 +77,7 @@ class RpcChannel(object):
                 self.logger.info(
                     'Decoded protobuf response from %s in %.2fms',
                     response.request.url, (time.time() - decode_start_time) * 1000,
-                    extra={'_text': str(rc)}
+                    extra={'_protobuf': rc}
                 )
 
             done(rc)
