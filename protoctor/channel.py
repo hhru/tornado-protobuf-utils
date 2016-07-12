@@ -126,7 +126,7 @@ class RpcChannel(object):
             self.logger.info(
                 'Encoded protobuf request to %s %s in %.2fms',
                 http_request.method, http_request.url, (time.time() - encode_start_time) * 1000,
-                extra={'_text': str(request)}
+                extra={'_protobuf': request}
             )
 
         self.fetch(http_request, _cb)
