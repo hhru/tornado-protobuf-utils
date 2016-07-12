@@ -1,4 +1,4 @@
-from channel import RpcChannel, AsyncRpcChannel
+from protoctor.channel import RpcChannel, AsyncRpcChannel
 
 
 def construct_async_protobuf_service(service_stub, host, fetcher, **kwargs):

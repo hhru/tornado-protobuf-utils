@@ -31,9 +31,9 @@ class RpcChannel(object):
             }
         )
 
-        for k, v in self.kwargs.iteritems():
+        for k in self.kwargs:
             if k in self.request_args:
-                request_params[k] = v
+                request_params[k] = self.kwargs[k]
 
         data = self.kwargs.get('data', {})
         if request_params['method'] not in ('POST', 'PATCH', 'PUT'):
@@ -47,7 +47,7 @@ class RpcChannel(object):
         try:
             response = self.fetcher(http_request)
             callback(response)
-        except HTTPError, e:
+        except HTTPError as e:
             callback(e.response or HTTPResponse(http_request, e.code, error=e))
 
     def CallMethod(self, method_descriptor, rpc_controller, request, response_class, done):
