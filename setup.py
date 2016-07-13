@@ -32,9 +32,10 @@ setup(
     packages=['protoctor'],
     cmdclass={'build_py': BuildHook, 'test': TestHook},
     install_requires=[
-        'nose', 'hhwebutils'
+        'tornado >= 3.2.2'
     ],
     tests_require=[
-        'pep8 < 1.6'
+        'nose',
+        'pycodestyle == 2.0.0'
     ]
 )

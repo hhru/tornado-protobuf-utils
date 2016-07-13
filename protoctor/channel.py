@@ -31,9 +31,9 @@ class RpcChannel(object):
             }
         )
 
-        for k, v in self.kwargs.iteritems():
+        for k in self.kwargs:
             if k in self.request_args:
-                request_params[k] = v
+                request_params[k] = self.kwargs[k]
 
         data = self.kwargs.get('data', {})
         if request_params['method'] not in ('POST', 'PATCH', 'PUT'):
@@ -47,7 +47,7 @@ class RpcChannel(object):
         try:
             response = self.fetcher(http_request)
             callback(response)
-        except HTTPError, e:
+        except HTTPError as e:
             callback(e.response or HTTPResponse(http_request, e.code, error=e))
 
     def CallMethod(self, method_descriptor, rpc_controller, request, response_class, done):
@@ -126,7 +126,7 @@ class RpcChannel(object):
             self.logger.info(
                 'Encoded protobuf request to %s %s in %.2fms',
                 http_request.method, http_request.url, (time.time() - encode_start_time) * 1000,
-                extra={'_text': str(request)}
+                extra={'_protobuf': request}
             )
 
         self.fetch(http_request, _cb)
